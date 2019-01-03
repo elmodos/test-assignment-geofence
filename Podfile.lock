@@ -1,0 +1,29 @@
+PODS:
+  - LocationPickerViewController (3.4)
+  - RxAtomic (4.4.0)
+  - RxCocoa (4.4.0):
+    - RxSwift (~> 4.0)
+  - RxSwift (4.4.0):
+    - RxAtomic (~> 4.4)
+
+DEPENDENCIES:
+  - LocationPickerViewController
+  - RxCocoa (~> 4)
+  - RxSwift (~> 4)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - LocationPickerViewController
+    - RxAtomic
+    - RxCocoa
+    - RxSwift
+
+SPEC CHECKSUMS:
+  LocationPickerViewController: 4f33d63587bca682267a09779de2b2e09cf5b8e2
+  RxAtomic: eacf60db868c96bfd63320e28619fe29c179656f
+  RxCocoa: df63ebf7b9a70d6b4eeea407ed5dd4efc8979749
+  RxSwift: 5976ecd04fc2fefd648827c23de5e11157faa973
+
+PODFILE CHECKSUM: 32e2f162e8448eecaaf0b6793c0f8aab292750ab
+
+COCOAPODS: 1.6.0.beta.1
