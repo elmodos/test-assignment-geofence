@@ -62,6 +62,12 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
 
     public override init() {
         super.init()
+        
+        let regions = self.monitoredRegions()
+        if let region = regions.first(where: { $0.identifier == self.geofenceRegionId }) as? CLCircularRegion {
+            self.variableIsMonitoring.value = true
+            self.updateGeofenceIfNeeded(center: region.center, radius: region.radius)
+        }
         self.clLocationManager.delegate = self
         
         Observable.combineLatest(self.geofenceCenter.asObservable(), self.geofenceRadius.asObservable())
