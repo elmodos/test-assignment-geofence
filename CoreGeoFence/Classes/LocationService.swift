@@ -15,13 +15,8 @@ public protocol LocationService {
     var serviceAuthorizationStatus: CLAuthorizationStatus { get }
     var serviceAuthorizationStatusObservable: Observable<CLAuthorizationStatus> { get }
     
-    var serviceIsEnabled: Bool { get }
     var serviceIsEnabledObservable: Observable<Bool> { get }
-
-    var isMonitoring: Bool { get }
     var isMonitoringObservable: Observable<Bool> { get }
-
-    var regionState: CLRegionState? { get }
     var regionStateObservable: Observable<CLRegionState?> { get }
 
     func requestAlwaysAuthorization()

@@ -8,7 +8,6 @@
 
 import UIKit
 import RxSwift
-import RxCocoa
 import CoreLocation
 
 public class LocationManager: NSObject, LocationService, CLLocationManagerDelegate {
@@ -18,11 +17,6 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
     public var serviceAuthorizationStatus: CLAuthorizationStatus {
         return self.variableServiceAuthorizationStatus.value
     }
-    
-    public var serviceIsEnabled: Bool {
-        return self.variableServiceIsEnabled.value
-    }
-
     public var serviceAuthorizationStatusObservable: Observable<CLAuthorizationStatus> {
         return self.variableServiceAuthorizationStatus.asObservable()
     }

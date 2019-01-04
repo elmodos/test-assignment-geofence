@@ -67,36 +67,6 @@ class MainViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.viewLifeDisposeBag = DisposeBag()
-
-        // Summary
-        let observableIsMonitoring = self.locationService.isMonitoringObservable
-        let observableRegionState = self.locationService.regionStateObservable
-        Observable.combineLatest(observableIsMonitoring, observableRegionState)
-            .subscribe(onNext: { [weak self] _, _ in
-                let indexPath = IndexPath(row: Row.summary.rawValue, section: 0)
-                self?.tableView?.reloadRows(at: [indexPath], with: .automatic)
-            }).disposed(by: self.viewLifeDisposeBag)
-
-        // Location services status
-        let observableStatus = self.locationService.serviceAuthorizationStatusObservable
-        let observableIsEnabled = self.locationService.serviceIsEnabledObservable
-        Observable.combineLatest(observableStatus, observableIsEnabled)
-            .subscribe(onNext: { [weak self] _, _ in
-                let indexPath = IndexPath(row: Row.locationStatus.rawValue, section: 0)
-                self?.tableView?.reloadRows(at: [indexPath], with: .automatic)
-            }).disposed(by: self.viewLifeDisposeBag)
-        
-        // Geofence region
-        let observableCenter = self.locationService.geofenceCenter.asObservable()
-        let observableRadius = self.locationService.geofenceRadius.asObservable()
-        Observable.combineLatest(observableCenter, observableRadius)
-            .subscribe(onNext: { [weak self] _, _ in
-                let indexPaths = [
-                    IndexPath(row: Row.coordinate.rawValue, section: 0),
-                    IndexPath(row: Row.radius.rawValue, section: 0)
-                ]
-                self?.tableView?.reloadRows(at: indexPaths, with: .automatic)
-            }).disposed(by: self.viewLifeDisposeBag)
     }
     
 // MARK: - Action Handlers
@@ -189,45 +159,91 @@ class MainViewController: UITableViewController {
     
 // MARK: - Private (Cells)
     
-    private func setupCellLocationStatus(_ cell: UITableViewCell) {
-        let statusString = "Location service access status: \(self.locationService.serviceAuthorizationStatus.humanReadableDescription)"
-        let serviceIsEnabledString = "Service is enabled: \(self.locationService.serviceIsEnabled)"
-        cell.textLabel?.text = statusString
-        cell.detailTextLabel?.text = serviceIsEnabledString
+    private func setupCellLocationStatus(_ cell: DisposableTableViewCell) {
+        self.locationService.serviceAuthorizationStatusObservable
+            .map {
+                "Location service access status \($0.humanReadableDescription)"
+            }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak cell] title in
+                cell?.textLabel?.text = title
+            })
+            .disposed(by: cell.disposableOnReuse)
+        
+        self.locationService.serviceIsEnabledObservable
+            .map {
+                 "Service is enabled: \($0)"
+            }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak cell] title in
+                cell?.detailTextLabel?.text = title
+            })
+            .disposed(by: cell.disposableOnReuse)
     }
     
-    private func setupCellCoordinate(_ cell: UITableViewCell) {
-        if let loc = self.locationService.geofenceCenter.value {
-            cell.textLabel?.text = "Change Coordinate"
-            let lat = String(format: "%.4f", loc.latitude)
-            let lon = String(format: "%.4f", loc.longitude)
-            cell.detailTextLabel?.text = "Coordinate: lat \(lat) lon \(lon)"
-        } else {
-            cell.textLabel?.text = "Select Coordinate"
-            cell.detailTextLabel?.text = nil
-        }
+    private func setupCellCoordinate(_ cell: DisposableTableViewCell) {
+        self.locationService.geofenceCenter.asObservable()
+            .map { (coordinate) -> (String?, String?) in
+                let title = coordinate == nil ? "Select Coordinate" : "Change Coordinate"
+                var subtitle: String? = nil
+                if let coordinate = coordinate {
+                    let lat = String(format: "%.4f", coordinate.latitude)
+                    let lon = String(format: "%.4f", coordinate.longitude)
+                    subtitle = "Coordinate: lat \(lat) lon \(lon)"
+                }
+                return (title, subtitle)
+            }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak cell] (title, subtitle) in
+                cell?.textLabel?.text = title
+                cell?.detailTextLabel?.text = subtitle
+            })
+            .disposed(by: cell.disposableOnReuse)
     }
     
-    private func setupCellRadius(_ cell: UITableViewCell) {
+    private func setupCellRadius(_ cell: DisposableTableViewCell) {
         cell.textLabel?.text = "Radius"
-        let radius = self.locationService.geofenceRadius.value
-        cell.detailTextLabel?.text = radius > 0
-            ? "\(self.locationService.geofenceRadius.value) meters"
-            : "not set"
+        self.locationService.geofenceRadius.asObservable()
+            .map {
+                $0 > 0 ? "\($0) meters" : "not set"
+            }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak cell] (text) in
+                cell?.detailTextLabel?.text = text
+            })
+            .disposed(by: cell.disposableOnReuse)
     }
     
-    private func setupCellSummary(_ cell: UITableViewCell) {
-        var summary: String = "Region monitoring: "
-        summary += self.locationService.isMonitoring
-            ? "active"
-            : "off"
-        summary += "\n"
-        summary += "Region status: \(self.locationService.regionState?.humanReadableDescription ?? "no information")"
-        cell.textLabel?.text = summary
+    private func setupCellSummary(_ cell: DisposableTableViewCell) {
+        let observable = Observable.combineLatest(
+            self.locationService.regionStateObservable,
+            self.locationService.isMonitoringObservable
+        )
+        observable
+            .map { (state, isMonitoring) -> String in
+                var summary: String = "Region monitoring: "
+                summary += isMonitoring ? "active" : "off"
+                summary += "\nRegion status: \(state?.humanReadableDescription ?? "no information")"
+                return summary
+            }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak cell] (title) in
+                cell?.textLabel?.text = title
+            })
+            .disposed(by: cell.disposableOnReuse)
     }
 
-    private func setupCellNotifications(_ cell: UITableViewCell) {
+    private func setupCellNotifications(_ cell: DisposableTableViewCell) {
         cell.textLabel?.text = "Notification persmissions"
+        self.notificationService.authorizationStatusObservable
+            .map {
+                "sound:\($0.soundSetting.hrd)\nalert:\($0.alertSetting.hrd)\nbadge:\($0.badgeSetting.hrd)"
+            }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak cell] (title) in
+                cell?.detailTextLabel?.text = title
+            })
+            .disposed(by: cell.disposableOnReuse)
     }
     
 // MARK: - UITableViewDelegate
@@ -257,8 +273,8 @@ class MainViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: self.defaultCellId)
-            ?? UITableViewCell(style: .subtitle, reuseIdentifier: self.defaultCellId)
+        let cell = tableView.dequeueReusableCell(withIdentifier: self.defaultCellId) as? DisposableTableViewCell
+            ?? DisposableTableViewCell(style: .subtitle, reuseIdentifier: self.defaultCellId)
         cell.textLabel?.numberOfLines = 0
         cell.detailTextLabel?.numberOfLines = 0
         cell.textLabel?.text = nil

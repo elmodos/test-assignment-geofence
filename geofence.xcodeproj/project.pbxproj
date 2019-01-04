@@ -25,6 +25,8 @@
 		FAD1456021DE89D200B560D2 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1455E21DE89D100B560D2 /* LocationService.swift */; };
 		FAD1456321DF735500B560D2 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1456221DF735500B560D2 /* NotificationService.swift */; };
 		FAD1456521DF73E200B560D2 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1456421DF73E200B560D2 /* NotificationManager.swift */; };
+		FAD1456721DF8FD700B560D2 /* DisposableTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1456621DF8FD700B560D2 /* DisposableTableViewCell.swift */; };
+		FAD1456921DF99AD00B560D2 /* UNNotificationSetting+Description.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1456821DF99AD00B560D2 /* UNNotificationSetting+Description.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,6 +101,8 @@
 		FAD1456121DEB39800B560D2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		FAD1456221DF735500B560D2 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		FAD1456421DF73E200B560D2 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		FAD1456621DF8FD700B560D2 /* DisposableTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisposableTableViewCell.swift; sourceTree = "<group>"; };
+		FAD1456821DF99AD00B560D2 /* UNNotificationSetting+Description.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UNNotificationSetting+Description.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -215,6 +219,7 @@
 			isa = PBXGroup;
 			children = (
 				FAD1452321DE1BFD00B560D2 /* MainViewController.swift */,
+				FAD1456621DF8FD700B560D2 /* DisposableTableViewCell.swift */,
 			);
 			path = MainViewController;
 			sourceTree = "<group>";
@@ -223,6 +228,7 @@
 			isa = PBXGroup;
 			children = (
 				FAD1452E21DE3F8700B560D2 /* CLAuthorizationStatus+Description.swift */,
+				FAD1456821DF99AD00B560D2 /* UNNotificationSetting+Description.swift */,
 				FAD1453321DE73E800B560D2 /* CLRegionState+Description.swift */,
 			);
 			path = Extensions;
@@ -250,9 +256,9 @@
 		FAD1455C21DE89D100B560D2 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				FAD1455D21DE89D100B560D2 /* LocationManager.swift */,
 				FAD1455E21DE89D100B560D2 /* LocationService.swift */,
 				FAD1456221DF735500B560D2 /* NotificationService.swift */,
+				FAD1455D21DE89D100B560D2 /* LocationManager.swift */,
 				FAD1456421DF73E200B560D2 /* NotificationManager.swift */,
 			);
 			path = Classes;
@@ -558,6 +564,8 @@
 				FA1045DE21DE157C00C5D23C /* AppDelegate.swift in Sources */,
 				FAD1453421DE73E800B560D2 /* CLRegionState+Description.swift in Sources */,
 				FAD1452521DE1BFD00B560D2 /* MainViewController.swift in Sources */,
+				FAD1456921DF99AD00B560D2 /* UNNotificationSetting+Description.swift in Sources */,
+				FAD1456721DF8FD700B560D2 /* DisposableTableViewCell.swift in Sources */,
 				FAD1452F21DE3F8700B560D2 /* CLAuthorizationStatus+Description.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
