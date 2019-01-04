@@ -56,30 +56,31 @@ class CoreGeoFenceTests: XCTestCase {
     }
 
     func testUpdateGeofenceNil() {
-        let location: CLLocationCoordinate2D? = nil
-        let radius: CLLocationDistance = 100
-        
-        self.manager.updateGeofence(center: location, radius: radius)
+        let region = HybridRegion()
+
+        self.manager.reloadRegion(region)
         let count = self.manager.getOwningRegions().count
 
         XCTAssert(count == 0)
     }
 
     func testUpdateGeofenceZeroRadius() {
-        let location = CLLocationCoordinate2D(latitude: 0, longitude: 0)
-        let radius: CLLocationDistance = 0
+        var region = HybridRegion()
+        region.geofenceCenter = CLLocationCoordinate2D(latitude: 0, longitude: 0)
+        region.geofenceRadius = 0
         
-        self.manager.updateGeofence(center: location, radius: radius)
-        
+        self.manager.reloadRegion(region)
+
         let count = self.manager.getOwningRegions().count
         XCTAssert(count == 0)
     }
 
     func testUpdateGeofenceValid() {
-        let location = CLLocationCoordinate2D(latitude: 0, longitude: 0)
-        let radius: CLLocationDistance = 100
+        var region = HybridRegion()
+        region.geofenceCenter = CLLocationCoordinate2D(latitude: 0, longitude: 0)
+        region.geofenceRadius = 100
         
-        self.manager.updateGeofence(center: location, radius: radius)
+        self.manager.reloadRegion(region)
         let count = self.manager.getOwningRegions().count
         
         XCTAssert(count == 1)
@@ -88,14 +89,15 @@ class CoreGeoFenceTests: XCTestCase {
     func testUpdateGeofenceMulti() {
         let location = CLLocationCoordinate2D(latitude: 0, longitude: 0)
         
-        self.manager.updateGeofence(center: location, radius: 100)
-        self.manager.updateGeofence(center: location, radius: 0)
-        self.manager.updateGeofence(center: location, radius: 200)
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: location, geofenceRadius: 100))
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: location, geofenceRadius: 0))
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: location, geofenceRadius: 200))
         let count = self.manager.getOwningRegions().count
         
         XCTAssert(count == 1)
     }
 
+    /*
     func testValidRegionValues() {
         let lat: Double = 55.55
         let lon: Double = -11.11
@@ -103,11 +105,11 @@ class CoreGeoFenceTests: XCTestCase {
         let location = CLLocationCoordinate2D(latitude: lat, longitude: lon)
         let radius: CLLocationDistance = 99
         
-        self.manager.updateGeofence(center: location, radius: radius)
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: location, geofenceRadius: radius))
         
-        XCTAssert(self.manager.geofenceCenter.value?.latitude.isEqual(to: lat) ?? false)
-        XCTAssert(self.manager.geofenceCenter.value?.longitude.isEqual(to: lon) ?? false)
-        XCTAssert(self.manager.geofenceRadius.value.isEqual(to: radius))
+        XCTAssert(self.manager.geofenceRegion.value.geofenceCenter?.latitude.isEqual(to: lat) ?? false)
+        XCTAssert(self.manager.geofenceRegion.value.geofenceCenter?.longitude.isEqual(to: lon) ?? false)
+        XCTAssert(self.manager.geofenceRegion.value.geofenceRadius.isEqual(to: radius))
     }
 
     func testGeofenceValuesUpdate() {
@@ -116,40 +118,42 @@ class CoreGeoFenceTests: XCTestCase {
         let location = CLLocationCoordinate2D(latitude: lat, longitude: lon)
         let radius: CLLocationDistance = 64.9999999
 
-        self.manager.updateGeofence(center: CLLocationCoordinate2D(latitude: 1, longitude: 1), radius: 1)
-        self.manager.updateGeofence(center: location, radius: radius)
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: CLLocationCoordinate2D(latitude: 1, longitude: 1), geofenceRadius: 1))
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: location, geofenceRadius: radius))
 
-        XCTAssert(self.manager.geofenceCenter.value?.latitude.isEqual(to: lat) ?? false)
-        XCTAssert(self.manager.geofenceCenter.value?.longitude.isEqual(to: lon) ?? false)
-        XCTAssert(self.manager.geofenceRadius.value.isEqual(to: radius))
+        XCTAssert(self.manager.geofenceRegion.value.geofenceCenter?.latitude.isEqual(to: lat) ?? false)
+        XCTAssert(self.manager.geofenceRegion.value.geofenceCenter?.longitude.isEqual(to: lon) ?? false)
+        XCTAssert(self.manager.geofenceRegion.value.geofenceRadius.isEqual(to: radius))
     }
-
+     */
+    
     func testGeofenceMonitoringValues() {
         let location = CLLocationCoordinate2D(latitude: 0.9999999, longitude: 0.9999999)
         
-        self.manager.updateGeofence(center: location, radius: 1)
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: location, geofenceRadius: 1))
         
-        XCTAssert(self.manager.isMonitoring)
+        XCTAssert(self.manager.variableIsMonitoringGeofence.value)
     }
 
     func testGeofenceMonitoringFaultyValues() {
-        self.manager.updateGeofence(center: nil, radius: 1)
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: nil, geofenceRadius: 1))
         
-        XCTAssertFalse(self.manager.isMonitoring)
+        XCTAssertFalse(self.manager.variableIsMonitoringGeofence.value)
         XCTAssert(self.manager.regionState == nil)
     }
 
     func testGeofenceMonitoringStartValues() {
         let location = CLLocationCoordinate2D(latitude: 0.9999999, longitude: 0.9999999)
 
-        self.manager.updateGeofence(center: location, radius: 1)
-        
-        XCTAssertTrue(self.manager.isMonitoring)
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: location, geofenceRadius: 1))
+
+        XCTAssertTrue(self.manager.variableIsMonitoringGeofence.value)
         XCTAssert(self.manager.regionState != nil)
     }
 
     func testRegionEnter() {
-        self.manager.updateGeofence(center: CLLocationCoordinate2D(latitude: 0, longitude: 0), radius: 1)
+        
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: CLLocationCoordinate2D(latitude: 0, longitude: 0), geofenceRadius: 1))
         guard let region = self.manager.monitoredRegions().first else {
             XCTFail("There should be a region")
             return
@@ -157,12 +161,13 @@ class CoreGeoFenceTests: XCTestCase {
         
         self.manager.locationManager(self.manager.clLocationManager, didEnterRegion: region)
         
-        XCTAssertTrue(self.manager.isMonitoring)
+        XCTAssertTrue(self.manager.variableIsMonitoringGeofence.value)
         XCTAssert(self.manager.regionState == .inside)
     }
 
     func testRegionExit() {
-        self.manager.updateGeofence(center: CLLocationCoordinate2D(latitude: 0, longitude: 0), radius: 1)
+        
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: CLLocationCoordinate2D(latitude: 0, longitude: 0), geofenceRadius: 1))
         guard let region = self.manager.monitoredRegions().first else {
             XCTFail("There should be a region")
             return
@@ -170,12 +175,12 @@ class CoreGeoFenceTests: XCTestCase {
         
         self.manager.locationManager(self.manager.clLocationManager, didExitRegion: region)
         
-        XCTAssertTrue(self.manager.isMonitoring)
+        XCTAssertTrue(self.manager.variableIsMonitoringGeofence.value)
         XCTAssert(self.manager.regionState == .outside)
     }
 
     func testRegionStateUpdate() {
-        self.manager.updateGeofence(center: CLLocationCoordinate2D(latitude: 0, longitude: 0), radius: 1)
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: CLLocationCoordinate2D(latitude: 0, longitude: 0), geofenceRadius: 1))
         guard let region = self.manager.monitoredRegions().first else {
             XCTFail("There should be a region")
             return
@@ -183,21 +188,23 @@ class CoreGeoFenceTests: XCTestCase {
         
         self.manager.locationManager(self.manager.clLocationManager, didDetermineState: .outside, for: region)
         
-        XCTAssertTrue(self.manager.isMonitoring)
+        XCTAssertTrue(self.manager.variableIsMonitoringGeofence.value)
         XCTAssert(self.manager.regionState == .outside)
     }
     
     func testInvalidRegionStateUpdate() {
         let region = CLCircularRegion(center: CLLocationCoordinate2D(latitude: 0, longitude: 0), radius: 1, identifier: "123")
-        
+
         self.manager.locationManager(self.manager.clLocationManager, didDetermineState: .outside, for: region)
         
-        XCTAssertFalse(self.manager.isMonitoring)
+        XCTAssertFalse(self.manager.variableIsMonitoringGeofence.value)
         XCTAssert(self.manager.regionState == nil)
     }
     
     func testRegionMonitoringFailed() {
-        self.manager.updateGeofence(center: CLLocationCoordinate2D(latitude: 0, longitude: 0), radius: 1)
+        let location = CLLocationCoordinate2D(latitude: 0, longitude: 0)
+        
+        self.manager.reloadRegion(HybridRegion(geofenceCenter: location, geofenceRadius: 1))
         guard let region = self.manager.monitoredRegions().first else {
             XCTFail("There should be a region")
             return
@@ -205,7 +212,7 @@ class CoreGeoFenceTests: XCTestCase {
         
         self.manager.locationManager(self.manager.clLocationManager, monitoringDidFailFor: region, withError: TestFakeError.stubError)
         
-        XCTAssertTrue(self.manager.isMonitoring)
+        XCTAssertTrue(self.manager.variableIsMonitoringGeofence.value)
         XCTAssert(self.manager.regionState == nil)
     }
 
