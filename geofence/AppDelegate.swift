@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreGeoFence
+import UserNotifications
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -19,7 +20,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.window = UIWindow(frame: UIScreen.main.bounds)
         
         let locationManager = LocationManager()
-        let rootController = MainViewController(locationService: locationManager)
+        let notificationManager = NotificationManager(notificationCenter: UNUserNotificationCenter.current())
+        let rootController = MainViewController(locationService: locationManager, notificationService: notificationManager)
         
         self.window?.rootViewController = UINavigationController(rootViewController: rootController)
         window?.makeKeyAndVisible()

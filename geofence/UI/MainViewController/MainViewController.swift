@@ -24,18 +24,30 @@ class MainViewController: UITableViewController {
         case locationStatus
         case coordinate
         case radius
+        case notifications
     }
     private let defaultCellId = "defaultCellId"
+    private let defaultNotifiationId = "defaultNotifiationId"
 
+    private var disposeBag = DisposeBag()
     private var viewLifeDisposeBag: DisposeBag!
     private let locationService: LocationService
-    
+    private let notificationService: NotificationService
+
 // MARK: - Memory Management
 
-    init(locationService: LocationService) {
+    init(locationService: LocationService, notificationService: NotificationService) {
         self.locationService = locationService
+        self.notificationService = notificationService
         super.init(style: .grouped)
         self.title = "Geofence"
+        
+        // Notification
+        self.locationService.regionStateObservable.subscribe(onNext: { [weak self] (state) in
+            guard let state = state else { return }
+            self?.sendNotification(for: state)
+        }).disposed(by: self.disposeBag)
+
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -93,6 +105,11 @@ class MainViewController: UITableViewController {
 
 // MARK: - Private
 
+    private func sendNotification(for state: CLRegionState) {
+        let message = "New region state: \(state.humanReadableDescription)"
+        self.notificationService.sendNotification(message, identifier: self.defaultNotifiationId)
+    }
+    
     private func openApplictionSettins() {
         guard let url = URL(string: UIApplication.openSettingsURLString),
             UIApplication.shared.canOpenURL(url) else {
@@ -166,6 +183,10 @@ class MainViewController: UITableViewController {
         self.present(alert, animated: true, completion: nil)
     }
 
+    private func checkRequestNotificationPermissions() {
+        self.notificationService.requestNotificationsAuthorization()
+    }
+    
 // MARK: - Private (Cells)
     
     private func setupCellLocationStatus(_ cell: UITableViewCell) {
@@ -205,6 +226,10 @@ class MainViewController: UITableViewController {
         cell.textLabel?.text = summary
     }
 
+    private func setupCellNotifications(_ cell: UITableViewCell) {
+        cell.textLabel?.text = "Notification persmissions"
+    }
+    
 // MARK: - UITableViewDelegate
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -220,6 +245,8 @@ class MainViewController: UITableViewController {
             self.inputRadius()
         case .summary:
             ()
+        case .notifications:
+            self.checkRequestNotificationPermissions()
         }
     }    
 
@@ -247,6 +274,8 @@ class MainViewController: UITableViewController {
                 self.setupCellRadius(cell)
             case .summary:
                 self.setupCellSummary(cell)
+            case .notifications:
+                self.setupCellNotifications(cell)
             }
         }
         return cell

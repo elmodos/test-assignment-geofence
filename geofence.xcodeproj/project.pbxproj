@@ -23,6 +23,8 @@
 		FAD1455421DE877C00B560D2 /* CoreGeoFence.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FAD1453E21DE877C00B560D2 /* CoreGeoFence.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FAD1455F21DE89D100B560D2 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1455D21DE89D100B560D2 /* LocationManager.swift */; };
 		FAD1456021DE89D200B560D2 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1455E21DE89D100B560D2 /* LocationService.swift */; };
+		FAD1456321DF735500B560D2 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1456221DF735500B560D2 /* NotificationService.swift */; };
+		FAD1456521DF73E200B560D2 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1456421DF73E200B560D2 /* NotificationManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -95,6 +97,8 @@
 		FAD1455D21DE89D100B560D2 /* LocationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		FAD1455E21DE89D100B560D2 /* LocationService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		FAD1456121DEB39800B560D2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		FAD1456221DF735500B560D2 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		FAD1456421DF73E200B560D2 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -248,6 +252,8 @@
 			children = (
 				FAD1455D21DE89D100B560D2 /* LocationManager.swift */,
 				FAD1455E21DE89D100B560D2 /* LocationService.swift */,
+				FAD1456221DF735500B560D2 /* NotificationService.swift */,
+				FAD1456421DF73E200B560D2 /* NotificationManager.swift */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -561,6 +567,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				FAD1456021DE89D200B560D2 /* LocationService.swift in Sources */,
+				FAD1456321DF735500B560D2 /* NotificationService.swift in Sources */,
+				FAD1456521DF73E200B560D2 /* NotificationManager.swift in Sources */,
 				FAD1455F21DE89D100B560D2 /* LocationManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
