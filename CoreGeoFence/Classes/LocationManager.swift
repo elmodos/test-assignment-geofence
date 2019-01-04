@@ -73,6 +73,14 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
         
         super.init()
         self.clLocationManager.delegate = self
+        
+        /*
+         Dropbox uses user location to trigger code executions from time to time, using same hack
+         */
+        self.clLocationManager.pausesLocationUpdatesAutomatically = false
+        self.clLocationManager.distanceFilter = 20 // meters
+        self.clLocationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        self.clLocationManager.allowsBackgroundLocationUpdates = true
 
         // Restore state
         let cachedWifiName = self.userDefaults.string(forKey: self.keyWifiName)
@@ -102,7 +110,24 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
                 self?.reloadRegion(region)
             })
             .disposed(by: self.disposeBag)
-
+        
+        // Start monitoring user location when not inside of region
+        // in case if wifi is specified
+        self.variableRegionState.asObservable()
+            .filter { [weak self] _ -> Bool in
+                return (self?.geofenceRegion.value.wifiName ?? "").count > 0
+            }
+            .subscribe(onNext: { [weak self] (state) in
+                print("New region state: ", terminator: "")
+                if state == .inside {
+                    print("stopping location update for wifi")
+                    self?.clLocationManager.stopUpdatingLocation()
+                } else {
+                    print("starting location update for wifi")
+                    self?.clLocationManager.startUpdatingLocation()
+                }
+            })
+        .disposed(by: self.disposeBag)
     }
     
 // MARK: - Action Handlers
@@ -146,16 +171,16 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
         }
         
         if run {
-            reachability.whenReachable = { [weak self] reachability in
-                self?.handleWifiReachability(reachability)
+            reachability.whenReachable = { [weak self] _ in
+                self?.checkIfWifiReachable()
             }
-            reachability.whenUnreachable = { [weak self] reachability in
-                self?.handleWifiReachability(reachability)
+            reachability.whenUnreachable = { [weak self] _ in
+                self?.checkIfWifiReachable()
             }
             
             do {
                 try reachability.startNotifier()
-                self.handleWifiReachability(reachability)
+                self.checkIfWifiReachable()
             } catch {
                 print("Unable to start notifier")
             }
@@ -167,9 +192,8 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
         }
     }
     
-    internal func handleWifiReachability(_ reachability: Reachability?) {
-        guard let wifiName = self.geofenceRegion.value.wifiName,
-            reachability?.connection == .wifi else {
+    internal func checkIfWifiReachable() {
+        guard let wifiName = self.geofenceRegion.value.wifiName else {
             self.variableIsWifiNameAccessible.value = false
             return
         }
@@ -191,6 +215,10 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
     }
     
 // MARK: - CLLocationManagerDelegate
+
+    public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        self.checkIfWifiReachable()
+    }
 
     public func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, for region: CLRegion) {
         if region.identifier == self.geofenceRegionId {
