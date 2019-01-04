@@ -13,6 +13,7 @@
 		FA1045DE21DE157C00C5D23C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1045DD21DE157C00C5D23C /* AppDelegate.swift */; };
 		FA10460421DE172800C5D23C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA1045FE21DE172800C5D23C /* Assets.xcassets */; };
 		FA10460521DE172800C5D23C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FA1045FF21DE172800C5D23C /* LaunchScreen.storyboard */; };
+		FACC35CE21E00C6B0064560F /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACC35CD21E00C6B0064560F /* Network.swift */; };
 		FAD1452521DE1BFD00B560D2 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1452321DE1BFD00B560D2 /* MainViewController.swift */; };
 		FAD1452F21DE3F8700B560D2 /* CLAuthorizationStatus+Description.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1452E21DE3F8700B560D2 /* CLAuthorizationStatus+Description.swift */; };
 		FAD1453421DE73E800B560D2 /* CLRegionState+Description.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1453321DE73E800B560D2 /* CLRegionState+Description.swift */; };
@@ -85,6 +86,7 @@
 		FA1045FE21DE172800C5D23C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FA10460021DE172800C5D23C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		FA10460321DE172800C5D23C /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FACC35CD21E00C6B0064560F /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
 		FAD1451E21DE191400B560D2 /* .swiftlint.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = .swiftlint.yml; path = ../../.swiftlint.yml; sourceTree = "<group>"; };
 		FAD1452321DE1BFD00B560D2 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		FAD1452C21DE362600B560D2 /* geofence.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = geofence.entitlements; sourceTree = "<group>"; };
@@ -260,6 +262,7 @@
 				FAD1456221DF735500B560D2 /* NotificationService.swift */,
 				FAD1455D21DE89D100B560D2 /* LocationManager.swift */,
 				FAD1456421DF73E200B560D2 /* NotificationManager.swift */,
+				FACC35CD21E00C6B0064560F /* Network.swift */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -366,6 +369,7 @@
 					};
 					FAD1453D21DE877C00B560D2 = {
 						CreatedOnToolsVersion = 10.1;
+						LastSwiftMigration = 1010;
 					};
 					FAD1454521DE877C00B560D2 = {
 						CreatedOnToolsVersion = 10.1;
@@ -451,6 +455,7 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-CoreGeoFenceTests/Pods-CoreGeoFenceTests-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/ReachabilitySwift/Reachability.framework",
 				"${BUILT_PRODUCTS_DIR}/RxAtomic/RxAtomic.framework",
 				"${BUILT_PRODUCTS_DIR}/RxCocoa/RxCocoa.framework",
 				"${BUILT_PRODUCTS_DIR}/RxSwift/RxSwift.framework",
@@ -459,6 +464,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Reachability.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxAtomic.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxCocoa.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxSwift.framework",
@@ -542,6 +548,7 @@
 				"${BUILT_PRODUCTS_DIR}/RxCocoa/RxCocoa.framework",
 				"${BUILT_PRODUCTS_DIR}/RxSwift/RxSwift.framework",
 				"${BUILT_PRODUCTS_DIR}/LocationPickerViewController/LocationPickerViewController.framework",
+				"${BUILT_PRODUCTS_DIR}/ReachabilitySwift/Reachability.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
@@ -551,6 +558,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxCocoa.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxSwift.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/LocationPickerViewController.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Reachability.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -578,6 +586,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FAD1456021DE89D200B560D2 /* LocationService.swift in Sources */,
+				FACC35CE21E00C6B0064560F /* Network.swift in Sources */,
 				FAD1456321DF735500B560D2 /* NotificationService.swift in Sources */,
 				FAD1456521DF73E200B560D2 /* NotificationManager.swift in Sources */,
 				FAD1455F21DE89D100B560D2 /* LocationManager.swift in Sources */,
@@ -788,6 +797,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = C73E302EF245C794114EC9CD /* Pods-CoreGeoFence.debug.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -807,6 +817,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.github.elmodos.CoreGeoFence;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -818,6 +830,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 84FCB74E5399EA3AE0E8B2CC /* Pods-CoreGeoFence.release.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -837,6 +850,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.github.elmodos.CoreGeoFence;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
