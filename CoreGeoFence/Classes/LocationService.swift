@@ -10,6 +10,12 @@ import Foundation
 import RxSwift
 import CoreLocation
 
+public struct HybridRegion {
+    public var geofenceCenter: CLLocationCoordinate2D?
+    public var geofenceRadius: CLLocationDistance = 0
+    // TODO: public var wifiName: String?
+}
+
 public protocol LocationService {
     
     var serviceAuthorizationStatus: CLAuthorizationStatus { get }
@@ -21,6 +27,5 @@ public protocol LocationService {
 
     func requestAlwaysAuthorization()
     
-    var geofenceCenter: Variable<CLLocationCoordinate2D?> { get }
-    var geofenceRadius: Variable<CLLocationDistance> { get }
+    var geofenceRegion: Variable<HybridRegion> { get }
 }

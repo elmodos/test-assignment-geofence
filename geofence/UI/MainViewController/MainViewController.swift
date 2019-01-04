@@ -102,11 +102,11 @@ class MainViewController: UITableViewController {
     }
     
     private func pickLocation(forcePick: Bool = false) {
-        guard forcePick || self.locationService.geofenceCenter.value == nil else {
+        guard forcePick || self.locationService.geofenceRegion.value.geofenceCenter == nil else {
             let actionSheet = UIAlertController(title: "Geofence center", message: "Change", preferredStyle: .actionSheet)
             actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
             actionSheet.addAction(UIAlertAction(title: "Remove Region", style: .destructive, handler: { _ in
-                self.locationService.geofenceCenter.value = nil
+                self.updateGeofenceCenter(nil)
             }))
             actionSheet.addAction(UIAlertAction(title: "Select New Center", style: .default, handler: { _ in
                 self.pickLocation(forcePick: true)
@@ -127,21 +127,26 @@ class MainViewController: UITableViewController {
     }
     
     private func updateGeofenceCenter(_ center: CLLocationCoordinate2D?) {
-        self.locationService.geofenceCenter.value = center
+        var region = self.locationService.geofenceRegion.value
+        region.geofenceCenter = center
+        self.locationService.geofenceRegion.value = region
     }
     
     private func inputRadius() {
         let alert = UIAlertController(title: "Geofence Radius", message: "in meters", preferredStyle: .alert)
-        let actionOk = UIAlertAction(title: "OK", style: .default) { [weak alert, weak self] _ in
+        let actionOk = UIAlertAction(title: "OK", style: .default) { [weak alert] _ in
             guard let numberString = alert?.textFields?.first?.text,
                 let number = Double(numberString),
                 number > 0 else {
                 return
             }
-            self?.locationService.geofenceRadius.value = number
+            var region = self.locationService.geofenceRegion.value
+            region.geofenceRadius = number
+            self.locationService.geofenceRegion.value = region
         }
         
         alert.addTextField { textField in
+            textField.text = "\(self.locationService.geofenceRegion.value.geofenceRadius)"
             textField.rx.text.orEmpty
                 .map { (Double($0) ?? 0) > 0 }
                 .share(replay: 1)
@@ -162,7 +167,7 @@ class MainViewController: UITableViewController {
     private func setupCellLocationStatus(_ cell: DisposableTableViewCell) {
         self.locationService.serviceAuthorizationStatusObservable
             .map {
-                "Location service access status \($0.humanReadableDescription)"
+                "Location service access status: \($0.humanReadableDescription)"
             }
             .observeOn(MainScheduler.instance)
             .subscribe(onNext: { [weak cell] title in
@@ -182,11 +187,11 @@ class MainViewController: UITableViewController {
     }
     
     private func setupCellCoordinate(_ cell: DisposableTableViewCell) {
-        self.locationService.geofenceCenter.asObservable()
-            .map { (coordinate) -> (String?, String?) in
-                let title = coordinate == nil ? "Select Coordinate" : "Change Coordinate"
+        self.locationService.geofenceRegion.asObservable()
+            .map { (region) -> (String?, String?) in
+                let title = region.geofenceCenter == nil ? "Select Coordinate" : "Change Coordinate"
                 var subtitle: String? = nil
-                if let coordinate = coordinate {
+                if let coordinate = region.geofenceCenter {
                     let lat = String(format: "%.4f", coordinate.latitude)
                     let lon = String(format: "%.4f", coordinate.longitude)
                     subtitle = "Coordinate: lat \(lat) lon \(lon)"
@@ -203,9 +208,9 @@ class MainViewController: UITableViewController {
     
     private func setupCellRadius(_ cell: DisposableTableViewCell) {
         cell.textLabel?.text = "Radius"
-        self.locationService.geofenceRadius.asObservable()
+        self.locationService.geofenceRegion.asObservable()
             .map {
-                $0 > 0 ? "\($0) meters" : "not set"
+                $0.geofenceRadius > 0 ? "\($0.geofenceRadius) meters" : "not set"
             }
             .observeOn(MainScheduler.instance)
             .subscribe(onNext: { [weak cell] (text) in

@@ -38,8 +38,7 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
         return self.variableRegionState.asObservable()
     }
 
-    public private(set) var geofenceCenter = Variable<CLLocationCoordinate2D?>(nil)
-    public private(set) var geofenceRadius = Variable<CLLocationDistance>(100)
+    public let geofenceRegion = Variable<HybridRegion>(HybridRegion())
 
 // MARK: Privates
 
@@ -56,18 +55,22 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
 
     public override init() {
         super.init()
-        
+        self.clLocationManager.delegate = self
+
         let regions = self.monitoredRegions()
         if let region = regions.first(where: { $0.identifier == self.geofenceRegionId }) as? CLCircularRegion {
-            self.variableIsMonitoring.value = true
-            self.updateGeofenceIfNeeded(center: region.center, radius: region.radius)
+            var hybridRegion = HybridRegion()
+            hybridRegion.geofenceCenter = region.center
+            hybridRegion.geofenceRadius = region.radius
+            self.geofenceRegion.value = hybridRegion
         }
-        self.clLocationManager.delegate = self
         
-        Observable.combineLatest(self.geofenceCenter.asObservable(), self.geofenceRadius.asObservable())
-            .subscribe(onNext: { [weak self] (center, radius) in
-                self?.updateGeofence(center: center, radius: radius)
-            }).disposed(by: self.disposeBag)
+        self.geofenceRegion.asObservable()
+            .subscribe(onNext: { [weak self] (region) in
+                self?.reloadRegion(region)
+            })
+            .disposed(by: self.disposeBag)
+
     }
     
 // MARK: - Action Handlers
@@ -80,59 +83,23 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
     
 // MARK: - Private
     
-    internal func updateGeofence(center: CLLocationCoordinate2D?, radius: CLLocationDistance) {
-        guard let center = center,
-            radius > 0 else {
-            self.unsetRegion()
-            return
-        }
-        self.addRegion(center: center, radius: radius)
-    }
-    
-    private func updateGeofenceIfNeeded(center: CLLocationCoordinate2D, radius: CLLocationDistance) {
-        if let existingCenter = self.geofenceCenter.value {
-            if !existingCenter.latitude.isEqual(to: center.latitude)
-                || !existingCenter.longitude.isEqual(to: center.longitude) {
-                self.geofenceCenter.value = center
-            }
+    internal func reloadRegion(_ region: HybridRegion) {
+        if let center = region.geofenceCenter,
+            region.geofenceRadius > 0 {
+            print("region update")
+            let region = CLCircularRegion(center: center, radius: region.geofenceRadius, identifier: self.geofenceRegionId)
+            region.notifyOnExit = true
+            region.notifyOnEntry = true
+            self.addMonitoredRegion(region)
+            self.variableRegionState.value = .unknown
         } else {
-            self.geofenceCenter.value = center
+            print("region unset")
+            self.monitoredRegions()
+                .filter { $0.identifier == self.geofenceRegionId }
+                .forEach { self.removeMonitoredRegion($0) }
+            self.variableRegionState.value = nil
         }
-        
-        if !self.geofenceRadius.value.isEqual(to: radius) {
-            self.geofenceRadius.value = radius
-        }
-    }
-
-    internal func addRegion(center: CLLocationCoordinate2D, radius: CLLocationDistance) {
-        guard radius > 0 else {
-            print("invalid radius")
-            return
-        }
-        print("region add")
-        let region = CLCircularRegion(center: center, radius: radius, identifier: self.geofenceRegionId)
-        region.notifyOnExit = true
-        region.notifyOnEntry = true
-        self.addMonitoredRegion(region)
-        self.variableRegionState.value = .unknown
-
-        self.updateGeofenceIfNeeded(center: center, radius: radius)
-        self.updateMonitoringIndicator()
-    }
-    
-    internal func unsetRegion() {
-        print("region unset")
-        self.monitoredRegions()
-            .filter {
-                $0.identifier == self.geofenceRegionId
-            } .forEach {
-                self.removeMonitoredRegion($0)
-            }
-        self.variableRegionState.value = nil
-        self.updateMonitoringIndicator()
-    }
-    
-    internal func updateMonitoringIndicator() {
+        // TODO: check if monitoredRegions returns new list immediatelly with new item
         self.variableIsMonitoring.value = self.monitoredRegions().count > 0
     }
     
