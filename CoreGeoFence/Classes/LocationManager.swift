@@ -39,7 +39,7 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
     }
 
     public private(set) var geofenceCenter = Variable<CLLocationCoordinate2D?>(nil)
-    public private(set) var geofenceRadius = Variable<CLLocationDistance>(0)
+    public private(set) var geofenceRadius = Variable<CLLocationDistance>(100)
 
 // MARK: Privates
 
