@@ -13,7 +13,12 @@ import CoreLocation
 public struct HybridRegion {
     public var geofenceCenter: CLLocationCoordinate2D?
     public var geofenceRadius: CLLocationDistance = 0
-    // TODO: public var wifiName: String?
+    public var wifiName: String?
+    init(geofenceCenter: CLLocationCoordinate2D? = nil, geofenceRadius: CLLocationDistance = 0, wifiName: String? = nil) {
+        self.geofenceCenter = geofenceCenter
+        self.geofenceRadius = geofenceRadius
+        self.wifiName = wifiName
+    }
 }
 
 public protocol LocationService {
@@ -22,9 +27,11 @@ public protocol LocationService {
     var serviceAuthorizationStatusObservable: Observable<CLAuthorizationStatus> { get }
     
     var serviceIsEnabledObservable: Observable<Bool> { get }
-    var isMonitoringObservable: Observable<Bool> { get }
+    var isMonitoringGeofenceObservable: Observable<Bool> { get }
+    var isMonitoringWifiObservable: Observable<Bool> { get }
     var regionStateObservable: Observable<CLRegionState?> { get }
-
+    var isWifiNameAccessible: Observable<Bool> { get }
+    
     func requestAlwaysAuthorization()
     
     var geofenceRegion: Variable<HybridRegion> { get }

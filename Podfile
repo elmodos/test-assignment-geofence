@@ -9,6 +9,7 @@ end
 
 target 'CoreGeoFence' do
     shared_pods
+    pod 'ReachabilitySwift'
 end
 
 target 'CoreGeoFenceTests' do

@@ -20,10 +20,12 @@ class MainViewController: UITableViewController {
 // MARK: Privates
 
     private enum Row: Int, CaseIterable {
+        case status
         case summary
         case locationStatus
         case coordinate
         case radius
+        case wifi
         case notifications
     }
     private let defaultCellId = "defaultCellId"
@@ -157,12 +159,48 @@ class MainViewController: UITableViewController {
         alert.addAction(actionOk)
         self.present(alert, animated: true, completion: nil)
     }
+    
+    private func inputWifiName() {
+        let alert = UIAlertController(title: "Wifi", message: "Access Point Name", preferredStyle: .alert)
+        let actionOk = UIAlertAction(title: "OK", style: .default) { [weak alert] _ in
+            let string = alert?.textFields?.first?.text
+            var region = self.locationService.geofenceRegion.value
+            region.wifiName = string?.count == 0 ? nil : string
+            self.locationService.geofenceRegion.value = region
+        }
+        
+        alert.addTextField { textField in
+            textField.text = self.locationService.geofenceRegion.value.wifiName
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(actionOk)
+        self.present(alert, animated: true, completion: nil)
+    }
 
     private func checkRequestNotificationPermissions() {
         self.notificationService.requestNotificationsAuthorization()
     }
     
 // MARK: - Private (Cells)
+    
+    private func setupCellStatus(_ cell: DisposableTableViewCell) {
+        let observable = Observable.combineLatest(
+            self.locationService.regionStateObservable,
+            self.locationService.isWifiNameAccessible
+        )
+        observable
+            .map { (state, isWifiAccessible) -> (String) in
+                return state == .inside || isWifiAccessible
+                    ? "INSIDE"
+                    : "OUTSIDE"
+            }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak cell] (title) in
+                cell?.textLabel?.text = title
+            })
+            .disposed(by: cell.disposableOnReuse)
+
+    }
     
     private func setupCellLocationStatus(_ cell: DisposableTableViewCell) {
         self.locationService.serviceAuthorizationStatusObservable
@@ -222,22 +260,38 @@ class MainViewController: UITableViewController {
     private func setupCellSummary(_ cell: DisposableTableViewCell) {
         let observable = Observable.combineLatest(
             self.locationService.regionStateObservable,
-            self.locationService.isMonitoringObservable
+            self.locationService.isMonitoringGeofenceObservable,
+            self.locationService.isMonitoringWifiObservable,
+            self.locationService.isWifiNameAccessible
         )
         observable
-            .map { (state, isMonitoring) -> String in
-                var summary: String = "Region monitoring: "
-                summary += isMonitoring ? "active" : "off"
-                summary += "\nRegion status: \(state?.humanReadableDescription ?? "no information")"
-                return summary
+            .map { (state, isMonitoringGeo, isMonitoringWifi, isWifiAccessible) -> (String, String) in
+                var title: String = "Monitoring: "
+                title += isMonitoringGeo || isMonitoringWifi ? "active" : "off"
+                var subtitle = ""
+                subtitle += "Geofence status: \(state?.humanReadableDescription ?? "-")"
+                subtitle += " Wifi: \(isWifiAccessible ? "+" : "-")"
+                return (title, subtitle)
             }
             .observeOn(MainScheduler.instance)
-            .subscribe(onNext: { [weak cell] (title) in
+            .subscribe(onNext: { [weak cell] (title, subtitle) in
                 cell?.textLabel?.text = title
+                cell?.detailTextLabel?.text = subtitle
             })
             .disposed(by: cell.disposableOnReuse)
     }
 
+    private func setupCellWifi(_ cell: DisposableTableViewCell) {
+        cell.textLabel?.text = "Wifi Access Point"
+        self.locationService.geofenceRegion.asObservable()
+            .map { $0.wifiName ?? "not set" }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak cell] (text) in
+                cell?.detailTextLabel?.text = text
+            })
+            .disposed(by: cell.disposableOnReuse)
+    }
+    
     private func setupCellNotifications(_ cell: DisposableTableViewCell) {
         cell.textLabel?.text = "Notification persmissions"
         self.notificationService.authorizationStatusObservable
@@ -258,14 +312,16 @@ class MainViewController: UITableViewController {
         guard let row = Row(rawValue: indexPath.row) else { return }
         
         switch row {
+        case .status: ()
         case .locationStatus:
             self.checkRequestLocationPermission()
         case .coordinate:
             self.pickLocation()
         case .radius:
             self.inputRadius()
-        case .summary:
-            ()
+        case .summary: ()
+        case .wifi:
+            self.inputWifiName()
         case .notifications:
             self.checkRequestNotificationPermissions()
         }
@@ -287,6 +343,8 @@ class MainViewController: UITableViewController {
 
         if let row = Row(rawValue: indexPath.row) {
             switch row {
+            case .status:
+                self.setupCellStatus(cell)
             case .locationStatus:
                 self.setupCellLocationStatus(cell)
             case .coordinate:
@@ -295,6 +353,8 @@ class MainViewController: UITableViewController {
                 self.setupCellRadius(cell)
             case .summary:
                 self.setupCellSummary(cell)
+            case .wifi:
+                self.setupCellWifi(cell)
             case .notifications:
                 self.setupCellNotifications(cell)
             }

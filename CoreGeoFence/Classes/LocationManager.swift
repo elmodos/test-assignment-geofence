@@ -9,6 +9,7 @@
 import UIKit
 import RxSwift
 import CoreLocation
+import Reachability
 
 public class LocationManager: NSObject, LocationService, CLLocationManagerDelegate {
 
@@ -24,11 +25,12 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
         return self.variableServiceIsEnabled.asObservable()
     }
 
-    public var isMonitoring: Bool {
-        return self.variableIsMonitoring.value
+    public var isMonitoringGeofenceObservable: Observable<Bool> {
+        return self.variableIsMonitoringGeofence.asObservable()
     }
-    public var isMonitoringObservable: Observable<Bool> {
-        return self.variableIsMonitoring.asObservable()
+
+    public var isMonitoringWifiObservable: Observable<Bool> {
+        return self.variableIsMonitoringWifi.asObservable()
     }
 
     public var regionState: CLRegionState? {
@@ -38,32 +40,62 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
         return self.variableRegionState.asObservable()
     }
 
+    public var isWifiNameAccessible: Observable<Bool> {
+        return self.variableIsWifiNameAccessible.asObservable()
+    }
+
     public let geofenceRegion = Variable<HybridRegion>(HybridRegion())
 
 // MARK: Privates
 
     internal let variableServiceAuthorizationStatus = Variable(CLLocationManager.authorizationStatus())
     internal let variableServiceIsEnabled = Variable(CLLocationManager.locationServicesEnabled())
-    internal let variableIsMonitoring = Variable(false)
+    internal let variableIsMonitoringGeofence = Variable(false)
+    internal let variableIsMonitoringWifi = Variable(false)
     internal let variableRegionState = Variable<CLRegionState?>(nil)
+    internal let variableIsWifiNameAccessible = Variable(false)
     internal let clLocationManager = CLLocationManager()
 
     internal let disposeBag = DisposeBag()
     internal let geofenceRegionId = "geofenceRegionId"
     
+    private let reachability = Reachability()
+    
+    private let identifier: Int
+    private let userDefaults: UserDefaults
+    internal lazy var keyWifiName = "LocationManager.\(self.identifier).keyWifiName"
+    
 // MARK: - Memory Management
 
-    public override init() {
+    public init(identifier: Int = 0, userDefaults: UserDefaults = .standard) {
+        self.identifier = identifier
+        self.userDefaults = userDefaults
+        
         super.init()
         self.clLocationManager.delegate = self
 
+        // Restore state
+        let cachedWifiName = self.userDefaults.string(forKey: self.keyWifiName)
+        var cachedRegion: CLCircularRegion? = nil
         let regions = self.monitoredRegions()
         if let region = regions.first(where: { $0.identifier == self.geofenceRegionId }) as? CLCircularRegion {
+            cachedRegion = region
+        }
+        if cachedWifiName != nil || cachedRegion != nil {
             var hybridRegion = HybridRegion()
-            hybridRegion.geofenceCenter = region.center
-            hybridRegion.geofenceRadius = region.radius
+            hybridRegion.wifiName = cachedWifiName
+            if let region = cachedRegion {
+                hybridRegion.geofenceCenter = region.center
+                hybridRegion.geofenceRadius = region.radius
+            }
             self.geofenceRegion.value = hybridRegion
         }
+        
+        self.variableIsMonitoringWifi.asObservable()
+            .subscribe(onNext: { [weak self] (monitoring) in
+                self?.runWifiMonitoring(monitoring)
+            })
+            .disposed(by: self.disposeBag)
         
         self.geofenceRegion.asObservable()
             .subscribe(onNext: { [weak self] (region) in
@@ -84,6 +116,9 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
 // MARK: - Private
     
     internal func reloadRegion(_ region: HybridRegion) {
+        self.userDefaults.set(region.wifiName, forKey: self.keyWifiName)
+        self.userDefaults.synchronize()
+        
         if let center = region.geofenceCenter,
             region.geofenceRadius > 0 {
             print("region update")
@@ -99,8 +134,46 @@ public class LocationManager: NSObject, LocationService, CLLocationManagerDelega
                 .forEach { self.removeMonitoredRegion($0) }
             self.variableRegionState.value = nil
         }
-        // TODO: check if monitoredRegions returns new list immediatelly with new item
-        self.variableIsMonitoring.value = self.monitoredRegions().count > 0
+
+        self.variableIsMonitoringGeofence.value = self.monitoredRegions().count > 0
+        self.variableIsMonitoringWifi.value = region.wifiName != nil
+    }
+    
+    private func runWifiMonitoring(_ run: Bool) {
+        guard let reachability = self.reachability else {
+            self.variableIsWifiNameAccessible.value = false
+            return
+        }
+        
+        if run {
+            reachability.whenReachable = { [weak self] reachability in
+                self?.handleWifiReachability(reachability)
+            }
+            reachability.whenUnreachable = { [weak self] reachability in
+                self?.handleWifiReachability(reachability)
+            }
+            
+            do {
+                try reachability.startNotifier()
+                self.handleWifiReachability(reachability)
+            } catch {
+                print("Unable to start notifier")
+            }
+        } else {
+            reachability.whenReachable = nil
+            reachability.whenUnreachable = nil
+            reachability.stopNotifier()
+            self.variableIsWifiNameAccessible.value = false
+        }
+    }
+    
+    internal func handleWifiReachability(_ reachability: Reachability?) {
+        guard let wifiName = self.geofenceRegion.value.wifiName,
+            reachability?.connection == .wifi else {
+            self.variableIsWifiNameAccessible.value = false
+            return
+        }
+        self.variableIsWifiNameAccessible.value = wifiName == Network.getSSIDName()
     }
     
 // MARK: - Private (XCTest)
